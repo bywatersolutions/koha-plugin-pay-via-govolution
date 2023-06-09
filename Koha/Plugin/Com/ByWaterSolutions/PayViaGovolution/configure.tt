@@ -1,0 +1,49 @@
+[% INCLUDE 'doc-head-open.inc' %]
+ <title>Koha: Plugin: Pay Via Govolution: Configuration</title>
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+<body>
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Pay Via Govolution &rsaquo; Configuration</div>
+
+<div id="doc3">
+  <div class="container">
+    <form method="get">
+        <!-- Always pass these two parameters so the plugin system knows what to execute! -->
+        <input type="hidden" name="class" value="[% CLASS %]"/>
+        <input type="hidden" name="method" value="[% METHOD %]"/>
+
+        <div class="form-group">
+            <label for="url">Post URL: </label>
+            <input class="form-control" type="text" name="url" value="[% url %]" />
+        </div>
+
+        <div class="form-group">
+            <label for="application_id">Application ID: </label>
+            <input class="form-control" type="text" name="application_id" value="[% application_id %]" />
+        </div>
+
+        <label for="enable_opac_payments">Enable OPAC Account Payments: </label>
+        <select name="enable_opac_payments">
+            [% IF enable_opac_payments == 'No' %]
+                <option value="No" selected="selected">No</option>
+            [% ELSE %]
+                <option value="No">No</option>
+            [% END %]
+
+            [% IF enable_opac_payments == 'Yes' %]
+                <option value="Yes" selected="selected">Yes</option>
+            [% ELSE %]
+                <option value="Yes">Yes</option>
+            [% END %]
+        </select>
+
+        <input type="hidden" name="save" value="1" />
+
+        <input class="btn btn-primary" type="submit" value="Save configuration" />
+    </form>
+  </div>
+
+[% INCLUDE 'intranet-bottom.inc' %]

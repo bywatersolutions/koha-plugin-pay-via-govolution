@@ -1,0 +1,174 @@
+{
+  "/verification":{
+    "post":{
+      "x-mojo-to":"Com::ByWaterSolutions::PayViaGovolution::Controller#verification",
+      "operationId":"handleSessionVerificationRequest",
+      "tags":[
+        "govolution"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "parameters": [
+        {
+          "name": "application_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "message_version",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "remittance_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "security_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "responses":{
+        "200":{
+          "description":"Session verified",
+          "schema":{
+            "type":"object",
+            "properties":{
+              "action_type":{
+                "description":"PayNow",
+                "type":"string"
+              },
+              "client_account_number":{
+                "description":"internal id",
+                "type":"string"
+              },
+              "continue_processing":{
+                "description":"Continue processing",
+                "type":"boolean"
+              },
+              "redirect_user_url":{
+                "description":"Failure URL",
+                "type":"string"
+              },
+              "echo_failure":{
+                "description":"Show message",
+                "type":"string"
+              },
+              "language":{
+                "description":"Language",
+                "type":"string"
+              },
+              "user_message":{
+                "description":"Failure message",
+                "type":"string"
+              },
+              "amount":{
+                "description":"Payment amount",
+                "type":"string"
+              }
+            }
+          }
+        },
+        "500":{
+          "description":"An error occured",
+          "schema":{
+            "type":"object",
+            "properties":{
+              "error":{
+                "description":"An explanation for the error",
+                "type":"string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/notification":{
+    "post":{
+      "x-mojo-to":"Com::ByWaterSolutions::PayViaGovolution::Controller#notification",
+      "operationId":"handleSessionNotificationRequest",
+      "tags":[
+        "govolution"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "parameters": [
+        {
+          "name": "application_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "message_version",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "remittance_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "security_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "name": "transaction_id",
+          "in": "query",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "responses":{
+        "200":{
+          "description":"Session verified",
+          "schema":{
+            "type":"object",
+            "properties":{
+              "success":{
+                "description":"Success",
+                "type":"boolean"
+              }
+            }
+          }
+        },
+        "500":{
+          "description":"An error occured",
+          "schema":{
+            "type":"object",
+            "properties":{
+              "success":{
+                "description":"Success",
+                "type":"boolean"
+              },
+              "user_message":{
+                "description":"An explanation for the error",
+                "type":"string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
