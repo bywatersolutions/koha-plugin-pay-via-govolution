@@ -28,24 +28,15 @@ sub verification {
 
     return $c->render(
         status  => 500,
-        openapi => {
-            continue_processing => JSON::false,
-            echo_failure => JSON::true,
-            user_message => "This transaction cannot be found"
-        }
-    ) unless $remittance_hr;
+        text => q{continue_processing=false&echo_failure=true&user_message="This transaction cannot be found"}
+    ) unless $remittance_hr && $application_id eq $remittance_hr->{application_id};
 
     my $update_query = "UPDATE govolution_plugin_tokens SET security_id = ? WHERE token = ?";
     $dbh->do($update_query, undef, ($security_id, $remittance_id) );
 
     return $c->render(
         status => 200,
-        openapi => {
-            action_type => "PayNow",
-            continue_processing => JSON::true,
-            language => 'en_US',
-            amount => $remittance_hr->{amount},
-        }
+        text => qw{action_type=PayNow&continue_processing=true&language=en_US&amount=} . $remittance_hr->{amount}
     );
 
 }
@@ -69,13 +60,19 @@ sub notification {
     my $query = "SELECT * FROM govolution_plugin_tokens WHERE token = ?";
     my $remittance_hr = $dbh->selectrow_hashref( $query, undef, $remittance_id);
 
-    unless( $remittance_hr && $security_id eq $remittance_hr->{security_id} ){
+    warn Data::Dumper::Dumper( $remittance_hr);
+
+    unless( defined $remittance_hr && $security_id eq $remittance_hr->{security_id} && $application_id eq $remittance_hr->{application_id} ){
         return $c->render(
             status  => 500,
-            openapi => {
-                success => JSON::false,
-                user_message => "This transaction could not be found"
-            }
+            text => q{success=false&user_message="This transaction could not be found"}
+        );
+    }
+
+    unless( $transaction_status == 0 ){
+        return $c->render(
+            status  => 500,
+            text => q{success=false&user_message="This transaction failed on the remote end"}
         );
     }
 
@@ -90,10 +87,7 @@ sub notification {
         warn "rejected";
         return $c->render(
             status  => 500,
-            openapi => {
-                success => JSON::false,
-                user_message => "This transaction amount did not match the amount expected"
-            }
+            text => q{success=false&user_message="This transaction amount did not match the amount expected"}
         );
     }
 
@@ -108,7 +102,7 @@ sub notification {
             {
                 amount => $amount,
                 lines  => \@account_lines,
-                note   => "Govolution transaction $transaction_id",
+                note   => "Govolution transaction $transaction_id (application id: $application_id) ",
                 library_id => $patron->branchcode
             }
         );
@@ -119,18 +113,13 @@ sub notification {
         warn "return ok";
         return $c->render(
             status => 200,
-            openapi => {
-                success => JSON::true,
-            }
+            text => q{success=>true}
         );
     } else {
         warn "return nok";
         return $c->render(
             status  => 500,
-            openapi => {
-                success => JSON::false,
-                user_message => "There was an error processing this payment: $@"
-            }
+            text => q{success=false&user_message="There was an error processing this payment: } .$@ .q{"}
         );
     }
 

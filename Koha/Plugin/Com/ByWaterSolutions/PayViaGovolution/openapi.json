@@ -7,7 +7,7 @@
         "govolution"
       ],
       "produces": [
-        "application/json"
+        "text/html"
       ],
       "parameters": [
         {
@@ -37,56 +37,10 @@
       ],
       "responses":{
         "200":{
-          "description":"Session verified",
-          "schema":{
-            "type":"object",
-            "properties":{
-              "action_type":{
-                "description":"PayNow",
-                "type":"string"
-              },
-              "client_account_number":{
-                "description":"internal id",
-                "type":"string"
-              },
-              "continue_processing":{
-                "description":"Continue processing",
-                "type":"boolean"
-              },
-              "redirect_user_url":{
-                "description":"Failure URL",
-                "type":"string"
-              },
-              "echo_failure":{
-                "description":"Show message",
-                "type":"string"
-              },
-              "language":{
-                "description":"Language",
-                "type":"string"
-              },
-              "user_message":{
-                "description":"Failure message",
-                "type":"string"
-              },
-              "amount":{
-                "description":"Payment amount",
-                "type":"string"
-              }
-            }
-          }
+          "description":"Session verification parameters"
         },
         "500":{
-          "description":"An error occured",
-          "schema":{
-            "type":"object",
-            "properties":{
-              "error":{
-                "description":"An explanation for the error",
-                "type":"string"
-              }
-            }
-          }
+          "description":"An error occured"
         }
       }
     }
@@ -99,7 +53,7 @@
         "govolution"
       ],
       "produces": [
-        "application/json"
+        "text/html"
       ],
       "parameters": [
         {
@@ -137,36 +91,20 @@
           "in": "query",
           "required": false,
           "type": "string"
+        },
+        {
+          "name": "transaction_status",
+          "in": "query",
+          "required": false,
+          "type": "string"
         }
       ],
       "responses":{
         "200":{
-          "description":"Session verified",
-          "schema":{
-            "type":"object",
-            "properties":{
-              "success":{
-                "description":"Success",
-                "type":"boolean"
-              }
-            }
-          }
+          "description":"Transaction notification status"
         },
         "500":{
-          "description":"An error occured",
-          "schema":{
-            "type":"object",
-            "properties":{
-              "success":{
-                "description":"Success",
-                "type":"boolean"
-              },
-              "user_message":{
-                "description":"An explanation for the error",
-                "type":"string"
-              }
-            }
-          }
+          "description":"An error occured"
         }
       }
     }

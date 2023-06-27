@@ -80,11 +80,12 @@ sub opac_online_payment_begin {
     # with a 'remittance_id' We need to store all transaction data to look it up and return
     # a 'session verification response' 
     my $remittance_id = "B" . $borrowernumber . "T" . time;
+    my $application_id = $self->retrieve_data('application_id');
     C4::Context->dbh->do(
         q{
-        INSERT INTO govolution_plugin_tokens ( token, borrowernumber, accountline_ids, amount )
-        VALUES ( ?, ?, ?, ? )
-    }, undef, $remittance_id, $borrowernumber, join('|',@accountline_ids), $amount
+        INSERT INTO govolution_plugin_tokens ( token, borrowernumber, accountline_ids, amount, application_id )
+        VALUES ( ?, ?, ?, ?, ? )
+    }, undef, $remittance_id, $borrowernumber, join('|',@accountline_ids), $amount, $application_id
     );
 
     $template->param(
@@ -92,7 +93,7 @@ sub opac_online_payment_begin {
         remittance_id        => $remittance_id,
         accountlines         => \@accountlines,
         url                  => $self->retrieve_data('url'),
-        application_id       => $self->retrieve_data('application_id')
+        application_id       => $application_id
     );
 
     print $cgi->header();
@@ -169,6 +170,7 @@ sub install() {
 			 borrowernumber INT(11) NOT NULL,
              accountline_ids VARCHAR(255) NOT NULL,
              amount         DECIMAL(28,6),
+             application_id VARCHAR(255),
              security_id    VARCHAR(255) NULL DEFAULT NULL,
 			 PRIMARY KEY (token),
 			 CONSTRAINT token_bn FOREIGN KEY (borrowernumber) REFERENCES borrowers (
