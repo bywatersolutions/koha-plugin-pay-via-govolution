@@ -168,6 +168,7 @@ sub install() {
 			 created_on     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			 borrowernumber INT(11) NOT NULL,
              accountline_ids VARCHAR(255) NOT NULL,
+             amount         DECIMAL(28,6),
              security_id    VARCHAR(255) NULL DEFAULT NULL,
 			 PRIMARY KEY (token),
 			 CONSTRAINT token_bn FOREIGN KEY (borrowernumber) REFERENCES borrowers (
