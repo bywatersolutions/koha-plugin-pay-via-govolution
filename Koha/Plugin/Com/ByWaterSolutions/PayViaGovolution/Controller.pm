@@ -13,7 +13,6 @@ sub verification {
     my $c = shift->openapi->valid_input or return;
 
     my $params = $c->req->params->to_hash;
-    warn Data::Dumper::Dumper( "PARAMS", $params );
 
     my $application_id = $params->{application_id};
     my $message_version = $params->{message_version};
@@ -21,10 +20,8 @@ sub verification {
     my $security_id = $params->{security_id};
 
     my $dbh = C4::Context->dbh;
-    my $query = "SELECT * FROM govolution_plugin_tokens WHERE token = ?";
+    my $query = "SELECT * FROM govolution_plugin_tokens WHERE token = ? AND created_on >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)";
     my $remittance_hr = $dbh->selectrow_hashref( $query, undef, $remittance_id);
-
-    warn Data::Dumper::Dumper( "TOKEN ROW",$remittance_hr );
 
     return $c->render(
         status  => 500,
@@ -45,7 +42,6 @@ sub notification {
     my $c = shift->openapi->valid_input or return;
 
     my $params = $c->req->params->to_hash;
-    warn Data::Dumper::Dumper( "PARAMS", $params );
 
     my $application_id = $params->{application_id};
     my $message_version = $params->{message_version};
@@ -59,8 +55,6 @@ sub notification {
     my $dbh = C4::Context->dbh;
     my $query = "SELECT * FROM govolution_plugin_tokens WHERE token = ?";
     my $remittance_hr = $dbh->selectrow_hashref( $query, undef, $remittance_id);
-
-    warn Data::Dumper::Dumper( $remittance_hr);
 
     unless( defined $remittance_hr && $security_id eq $remittance_hr->{security_id} && $application_id eq $remittance_hr->{application_id} ){
         return $c->render(
@@ -76,15 +70,12 @@ sub notification {
         );
     }
 
-
-    warn Data::Dumper::Dumper( "TOKEN ROW",$remittance_hr );
     my $borrowernumber = $remittance_hr->{borrowernumber};
     my $remittance_accountline_ids = $remittance_hr->{accountline_ids};
     my @accountline_ids = split('|',$remittance_accountline_ids);
     my $remittance_amount = $remittance_hr->{amount};
 
     if( $remittance_amount != $amount ){
-        warn "rejected";
         return $c->render(
             status  => 500,
             text => q{success=false&user_message="This transaction amount did not match the amount expected"}
@@ -97,7 +88,6 @@ sub notification {
         accountlines_id => { -in => \@accountline_ids }
     })->as_list;
     eval{
-        warn "apyng";
         $account->pay(
             {
                 amount => $amount,
@@ -106,17 +96,14 @@ sub notification {
                 library_id => $patron->branchcode
             }
         );
-        warn "payed";
     };
     unless( $@ ){
         $dbh->do("DELETE from govolution_plugin_tokens WHERE token = ?", undef, $remittance_id);
-        warn "return ok";
         return $c->render(
             status => 200,
-            text => q{success=>true}
+            text => q{success=true}
         );
     } else {
-        warn "return nok";
         return $c->render(
             status  => 500,
             text => q{success=false&user_message="There was an error processing this payment: } .$@ .q{"}

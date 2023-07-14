@@ -157,6 +157,13 @@ sub configure {
     }
 }
 
+sub cronjob_nightly {
+    my ( $self ) = @_;
+
+    my $dbh = C4::Context->dbh();
+    $dbh->do("DELETE from govolution_plugin_tokens WHERE created_on < DATE_SUB(NOW(), INTERVAL 5 MINUTE)", undef, undef );
+}
+
 sub install() {
     my ( $self, $args ) = @_;
 

@@ -83,7 +83,9 @@
                         <input type="hidden" name="application_id" value="[% application_id %]" />
                         <input type="hidden" name="message_version" value="2.7" />
                         <input type="hidden" name="remittance_id" value="[% remittance_id %]" />
-                        <input type="submit" class="btn" value ="Yes, proceed with payment">
+                        <button type="submit" title="Begin payment" class="btn btn-primary">
+                            Yes, proceed with payment
+                        </button>
                     </form>
                 </div> <!-- / #useraccount -->
             </div> <!-- / .col-10 -->
