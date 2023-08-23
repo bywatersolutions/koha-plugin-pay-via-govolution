@@ -61,13 +61,14 @@ sub notification {
     my $payment_type = $params->{payment_type};
     my $amount = $params->{amount};
     my $transaction_id = $params->{transaction_id};
-    warn "Received app id: $application_id version $message_version remit id $remittance_id sec id $security_id" if $debug;
-    warn "Received status: $transaction_status type $payment_type aount $amount transaction id $transaction_id" if $debug;
 
     my $dbh = C4::Context->dbh;
     my $plugin = Koha::Plugin::Com::ByWaterSolutions::PayViaGovolution->new();
     my $table = $plugin->get_qualified_table_name('tokens');
     my $debug = $plugin->retrieve_data('debug');
+
+    warn "Received app id: $application_id version $message_version remit id $remittance_id sec id $security_id" if $debug;
+    warn "Received status: $transaction_status type $payment_type aount $amount transaction id $transaction_id" if $debug;
 
     my $query = "SELECT * FROM $table WHERE token = ?";
     my $remittance_hr = $dbh->selectrow_hashref( $query, undef, $remittance_id);
