@@ -40,6 +40,15 @@
             [% END %]
         </select>
 
+        <div class="">
+            <label for="debug">Enable log debugging: </label>
+            [% IF ( debug ) %]
+                 <input type="checkbox" name="debug" value="1" checked="checked"/>
+            [% ELSE %]
+                 <input type="checkbox" name="debug" value="1" />
+            [% END %]
+        </div>
+
         <input type="hidden" name="save" value="1" />
 
         <input class="btn btn-primary" type="submit" value="Save configuration" />

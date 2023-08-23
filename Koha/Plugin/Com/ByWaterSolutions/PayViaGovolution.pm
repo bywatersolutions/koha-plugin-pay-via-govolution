@@ -69,29 +69,35 @@ sub opac_online_payment_begin {
 
     my @accountline_ids = $cgi->multi_param('accountline');
 
-    my $rs = Koha::Database->new()->schema()->resultset('Accountline');
-    my @accountlines = map { $rs->find($_) } @accountline_ids;
+    my $accountlines = Koha::Account::Lines->search({ accountlines_id => { -in => \@accountline_ids } });
 
     my $patron = scalar Koha::Patrons->find($borrowernumber);
 
-    my $amount = sprintf("%.2f", sum( map { $_->amountoutstanding } @accountlines ) );
+    my $amount = sprintf("%.2f", $accountlines->total_outstanding );
+    my @parcels = ();
+    while ( my $accountline = $accountlines->next ) {
+        push @parcels, join('~', $accountline->id, $accountline->debit_type->description, $accountline->description, $accountline->amountoutstanding );
+    }
+    my $parcel = join("|",@parcels);
+
 
     # Govolution will take our form info, and then send a 'session verification request'
     # with a 'remittance_id' We need to store all transaction data to look it up and return
     # a 'session verification response' 
     my $remittance_id = "B" . $borrowernumber . "T" . time;
     my $application_id = $self->retrieve_data('application_id');
+    my $table = $self->get_qualified_table_name('tokens');
     C4::Context->dbh->do(
-        q{
-        INSERT INTO govolution_plugin_tokens ( token, borrowernumber, accountline_ids, amount, application_id )
-        VALUES ( ?, ?, ?, ?, ? )
-    }, undef, $remittance_id, $borrowernumber, join('|',@accountline_ids), $amount, $application_id
+        "
+        INSERT INTO $table ( token, borrowernumber, accountline_ids, amount, parcel, application_id )
+        VALUES ( ?, ?, ?, ?, ?, ? )
+    ", undef, $remittance_id, $borrowernumber, join('|',@accountline_ids), $amount, $parcel, $application_id
     );
 
     $template->param(
         borrower             => $patron,
         remittance_id        => $remittance_id,
-        accountlines         => \@accountlines,
+        accountlines         => $accountlines,
         url                  => $self->retrieve_data('url'),
         application_id       => $application_id
     );
@@ -140,6 +146,7 @@ sub configure {
             application_id => $self->retrieve_data('application_id'),
             enable_opac_payments => $self->retrieve_data('enable_opac_payments'),
             url => $self->retrieve_data('url'),
+            debug => $self->retrieve_data('debug'),
         );
 
         print $cgi->header();
@@ -148,9 +155,10 @@ sub configure {
     else {
         $self->store_data(
             {
-                application_id => $cgi->param('application_id'),
+                application_id       => $cgi->param('application_id'),
                 enable_opac_payments => $cgi->param('enable_opac_payments'),
-                url            => $cgi->param('url'),
+                url                  => $cgi->param('url'),
+                debug                => $cgi->param('debug'),
             }
         );
         $self->go_home();
@@ -161,7 +169,8 @@ sub cronjob_nightly {
     my ( $self ) = @_;
 
     my $dbh = C4::Context->dbh();
-    $dbh->do("DELETE from govolution_plugin_tokens WHERE created_on < DATE_SUB(NOW(), INTERVAL 5 MINUTE)", undef, undef );
+    my $table = $self->get_qualified_table_name('tokens');
+    $dbh->do("DELETE from $table WHERE created_on < DATE_SUB(NOW(), INTERVAL 5 MINUTE)", undef, undef );
 }
 
 sub install() {
@@ -169,14 +178,16 @@ sub install() {
 
     my $dbh = C4::Context->dbh();
 
-    my $query = q{
-		CREATE TABLE IF NOT EXISTS govolution_plugin_tokens
+    my $table = $self->get_qualified_table_name('tokens');
+    my $query = "
+		CREATE TABLE IF NOT EXISTS $table
 		  (
 			 token          VARCHAR(128),
 			 created_on     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			 borrowernumber INT(11) NOT NULL,
              accountline_ids VARCHAR(255) NOT NULL,
              amount         DECIMAL(28,6),
+             parcel         TEXT,
              application_id VARCHAR(255),
              security_id    VARCHAR(255) NULL DEFAULT NULL,
 			 PRIMARY KEY (token),
@@ -186,7 +197,7 @@ sub install() {
 		ENGINE=innodb
 		DEFAULT charset=utf8mb4
 		COLLATE=utf8mb4_unicode_ci;
-    };
+    ";
 
     return $dbh->do( $query );
 
