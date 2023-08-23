@@ -61,6 +61,8 @@ sub notification {
     my $payment_type = $params->{payment_type};
     my $amount = $params->{amount};
     my $transaction_id = $params->{transaction_id};
+    warn "Received app id: $application_id version $message_version remit id $remittance_id sec id $security_id" if $debug;
+    warn "Received status: $transaction_status type $payment_type aount $amount transaction id $transaction_id" if $debug;
 
     my $dbh = C4::Context->dbh;
     my $plugin = Koha::Plugin::Com::ByWaterSolutions::PayViaGovolution->new();
@@ -87,7 +89,7 @@ sub notification {
 
     my $borrowernumber = $remittance_hr->{borrowernumber};
     my $remittance_accountline_ids = $remittance_hr->{accountline_ids};
-    my @accountline_ids = split('|',$remittance_accountline_ids);
+    my @accountline_ids = split('\|',$remittance_accountline_ids);
     my $remittance_amount = $remittance_hr->{amount};
 
     if( $remittance_amount != $amount ){
@@ -121,7 +123,7 @@ sub notification {
             text => q{success=true}
         );
     } else {
-        warn "GoVolution: Payment failed with remittance id $remittance_id" if $debug;
+        warn "GoVolution: Payment failed with remittance id $remittance_id, error: $@" if $debug;
         return $c->render(
             status  => 500,
             text => q{success=false&user_message="There was an error processing this payment: } .$@ .q{"}
